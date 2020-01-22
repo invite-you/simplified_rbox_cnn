@@ -211,7 +211,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     n_tfrecord = 0
 
     # Load objects from geojson
-    geojson_path = os.path.join(src_dir, 'labels.json')
+    geojson_path = os.path.join(src_dir, 'train_labels.json')
     image_ids, obj_coords, class_indices, class_names = load_geojson(geojson_path)
 
     obj_polys = cvt_coords_to_polys(obj_coords)
