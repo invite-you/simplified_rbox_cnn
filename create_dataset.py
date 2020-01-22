@@ -180,10 +180,10 @@ def write_tfrecords(trf_writer, patches):
 
         center_ys, center_xs, heights, widths, thetas, class_indices, class_texts = [], [], [], [], [], [], []
         for coord, cls_idx, cls_text in patch.objects:
-            center_ys.append(coord[0] / patch_height)
-            center_xs.append(coord[1] / patch_width)
-            heights.append(coord[2] / patch_height)
-            widths.append(coord[3] / patch_width)
+            center_ys.append(coord[0])
+            center_xs.append(coord[1])
+            heights.append(coord[2])
+            widths.append(coord[3])
             thetas.append(coord[4])
             class_texts.append(cls_text.encode())
             class_indices.append(cls_idx)
@@ -274,11 +274,11 @@ if __name__ == '__main__':
                         help='Path to save tfrecords')
     parser.add_argument('--patch_size',
                         type=int,
-                        default=768,
+                        default=896,
                         help='Patch size')
     parser.add_argument('--patch_overlay',
                         type=int,
-                        default=256,
+                        default=512,
                         help='Overlay size for patching')
     parser.add_argument('--object_fraction_thresh',
                         type=float,
