@@ -274,11 +274,11 @@ if __name__ == '__main__':
                         help='Path to save tfrecords')
     parser.add_argument('--patch_size',
                         type=int,
-                        default=896,
+                        default=768,
                         help='Patch size')
     parser.add_argument('--patch_overlay',
                         type=int,
-                        default=512,
+                        default=256,
                         help='Overlay size for patching')
     parser.add_argument('--object_fraction_thresh',
                         type=float,
