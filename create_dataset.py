@@ -207,7 +207,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     :return:
     """
 
-    trf_writer = tf.python_io.TFRecordWriter(dst_path)
+    trf_writer = tf.io.TFRecordWriter(dst_path)
     n_tfrecord = 0
 
     # Load objects from geojson
