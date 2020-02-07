@@ -1,19 +1,19 @@
 item {
-  id: 1
+  id: 0
   name: 'container'
 }
 
 item {
-  id: 2
+  id: 1
   name: 'oil tanker'
 }
 
 item {
-  id: 3
+  id: 2
   name: 'aircraft carrier'
 }
 
 item {
-  id: 4
+  id: 3
   name: 'maritime vessels'
 }
