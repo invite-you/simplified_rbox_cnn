@@ -13,6 +13,9 @@ from skimage.io import imread
 from shapely.geometry import Polygon
 import tensorflow as tf
 
+from functools import reduce
+import operator
+
 # Object Class
 Object = namedtuple('Object', 'coord cls_idx cls_text')
 
@@ -21,15 +24,19 @@ Patch = namedtuple('Patch', 'image_id image row col objects')
 
 
 def get_patch_image(image, row, col, patch_size):
-    patch_image_height = patch_size if image.shape[0] - row > patch_size else image.shape[0] - row
-    patch_image_width = patch_size if image.shape[1] - col > patch_size else image.shape[1] - col
+    patch_image_height = patch_size if image.shape[0] - \
+        row > patch_size else image.shape[0] - row
+    patch_image_width = patch_size if image.shape[1] - \
+        col > patch_size else image.shape[1] - col
 
-    patch_image = image[row: row + patch_image_height, col: col + patch_image_width]
+    patch_image = image[row: row + patch_image_height,
+                        col: col + patch_image_width]
 
     if patch_image_height < patch_size or patch_image_width < patch_size:
         pad_height = patch_size - patch_image_height
         pad_width = patch_size - patch_image_width
-        patch_image = np.pad(patch_image, ((0, pad_height), (0, pad_width), (0, 0)), 'constant')
+        patch_image = np.pad(
+            patch_image, ((0, pad_height), (0, pad_width), (0, 0)), 'constant')
 
     return patch_image
 
@@ -53,7 +60,8 @@ def load_geojson(filename):
     for idx in range(len(data['features'])):
         properties = data['features'][idx]['properties']
         image_ids[idx] = properties['image_id']
-        obj_coords[idx] = np.array([float(num) for num in properties['bounds_imcoords'].split(",")])
+        obj_coords[idx] = np.array(
+            [float(num) for num in properties['bounds_imcoords'].split(",")])
         class_indices[idx] = properties['type_id']
         class_names[idx] = properties['type_name']
 
@@ -89,7 +97,8 @@ def cvt_coords_to_polys(coords):
 
     polygons = []
     for coord in coords:
-        polygons.append(Polygon([coord[0:2], coord[2:4], coord[4:6], coord[6:8]]))
+        polygons.append(
+            Polygon([coord[0:2], coord[2:4], coord[4:6], coord[6:8]]))
     return np.array(polygons)
 
 
@@ -160,7 +169,49 @@ def cvt_rbox_to_tfexample(encode_image, image_height, image_width, image_filenam
     return example
 
 
-def write_tfrecords(trf_writer, patches):
+def rotate_box(bb, cx, cy, theta):
+    new_bb = list(bb)
+    for i, coord in enumerate(bb):
+        # opencv calculates standard transformation matrix
+        M = cv2.getRotationMatrix2D((cx, cy), theta, 1.0)
+        # Prepare the vector to be transformed
+        v = [coord[0], coord[1], 1]
+        # Perform the actual rotation and return the image
+        calculated = np.dot(M, v)
+        new_bb[i] = (calculated[0], calculated[1])
+    return new_bb
+
+
+def convert_bbox_to_rbox(cx, cy, h, w, theta):
+    x1, y1, x3, y3 = cx-(w/2), cy-(h/2), cx+(w/2), cy+(h/2)
+    x4, y4, x2, y2 = cx-(w/2), cy+(h/2), cx+(w/2), cy-(h/2)
+    bbox = [(x1, y1), (x2, y2), (x3, y3), (x4, y4)]
+
+    rbox = rotate_box(bbox, cx, cy, -theta)
+    return rbox
+
+
+def sort_clockwise(points):
+    r = list(map(float, points))
+    coords = [r[0:2], r[2:4], r[4:6], r[6:8]]
+    center = tuple(map(operator.truediv, reduce(
+        lambda x, y: map(operator.add, x, y), coords), [len(coords)] * 2))
+    sorted_coords = sorted(coords, key=lambda coord: (-135 - math.degrees(
+        math.atan2(*tuple(map(operator.sub, coord, center))[::-1]))) % 360)
+    return [coord for coords in sorted_coords for coord in coords]
+
+
+gimg_id = 0
+gannt_id = 0
+map_labels = {'aircraft carrier': 1, 'container': 2,
+              'oil tanker': 3, 'maritime vessels': 4}
+# from pycocotools import mask as cocomask
+
+annotations = []
+gimages = []
+
+
+def write_tfrecords(trf_writer, patches, src_dir):
     """ Write patch information into writer
 
        :param (str) dst_tfr_path: path to save tfrecords
@@ -169,17 +220,41 @@ def write_tfrecords(trf_writer, patches):
     """
 
     for patch in patches:
-        image_format = b'png'
         image = cv2.cvtColor(patch.image, cv2.COLOR_RGB2BGR)
-        image_as_bytes = cv2.imencode('.png', image)[1].tostring()
+        id = patch.image_id.split(".")[0]
+        patch_image_path = os.path.join(
+            src_dir, 'new_patch', F"{id}_{patch.row}_{patch.col}.png")
+        cv2.imwrite(patch_image_path, image)
+        #image_as_bytes = cv2.imencode('.png', image)[1].tostring()
 
-        encoded_image = image_as_bytes
+        #encoded_image = image_as_bytes
         patch_height = patch.image.shape[0]
         patch_width = patch.image.shape[1]
         image_filename = patch.image_id.encode()
 
-        center_ys, center_xs, heights, widths, thetas, class_indices, class_texts = [], [], [], [], [], [], []
+        global gimg_id
+        gimages.append({
+            "license": 1,
+            "file_name": image_filename,
+            "coco_url": "",
+            "height": patch_height,
+            "width": patch_width,
+            "date_captured": "2013-11-14 17:02:52",
+            "flickr_url": "",
+            "id": gimg_id
+        })
+
+        gimg_id += 1
+
+        center_ys, center_xs, heights, widths, thetas, class_indices, class_texts = [
+        ], [], [], [], [], [], []
         for coord, cls_idx, cls_text in patch.objects:
+            """
+            center_ys.append(coord[0] / patch_height)
+            center_xs.append(coord[1] / patch_width)
+            heights.append(coord[2] / patch_height)
+            widths.append(coord[3] / patch_width)
+            """
             center_ys.append(coord[0])
             center_xs.append(coord[1])
             heights.append(coord[2])
@@ -188,10 +263,36 @@ def write_tfrecords(trf_writer, patches):
             class_texts.append(cls_text.encode())
             class_indices.append(cls_idx)
 
-        tfexample = cvt_rbox_to_tfexample(encoded_image, patch_height, patch_width, image_filename, image_format,
-                                          center_ys, center_xs, heights, widths, thetas, class_texts, class_indices)
+            rbox = convert_bbox_to_rbox(
+                coord[1], coord[0], coord[2], coord[3], coord[4])
 
-        trf_writer.write(tfexample.SerializeToString())
+            xs = np.array(rbox)[:, 0]
+            ys = np.array(rbox)[:, 1]
+            xyMin = [min(xs), min(ys)]
+            xyMax = [max(xs), max(ys)]
+            xyMin.extend(xyMax)
+
+            points = [xx for x in rbox for xx in x]
+            points = sort_clockwise(points)
+
+            global gannt_id
+
+            annotations.append({
+                "segmentation": [points],
+                "area": Polygon(rbox).area,
+                "iscrowd": 0,
+                "image_id": gimg_id,
+                "bbox": xyMin,  # [473.07,395.93,38.65,28.67],
+                "category_id": map_labels[cls_text],
+                "id": gannt_id,
+                "image_path": patch_image_path
+            })
+
+            gannt_id += 1
+        # tfexample = cvt_rbox_to_tfexample(encoded_image, patch_height, patch_width, image_filename, image_format,
+        #                                  center_ys, center_xs, heights, widths, thetas, class_texts, class_indices)
+
+        # trf_writer.write(tfexample.SerializeToString())
 
 
 def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, object_fraction_thresh=0.7,
@@ -207,12 +308,13 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     :return:
     """
 
-    trf_writer = tf.io.TFRecordWriter(dst_path)
+    trf_writer = tf.python_io.TFRecordWriter(dst_path)
     n_tfrecord = 0
 
     # Load objects from geojson
-    geojson_path = os.path.join(src_dir, 'test_labels.json')
-    image_ids, obj_coords, class_indices, class_names = load_geojson(geojson_path)
+    geojson_path = os.path.join(src_dir, 'labels.json')
+    image_ids, obj_coords, class_indices, class_names = load_geojson(
+        geojson_path)
 
     obj_polys = cvt_coords_to_polys(obj_coords)
     obj_coords = cvt_coords_to_rboxes(obj_coords)
@@ -253,19 +355,52 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                     patches.append(
                         Patch(image_id=image_id, image=patch_image, row=row, col=col, objects=objects_in_patch))
 
-
-        write_tfrecords(trf_writer, patches)
+        write_tfrecords(trf_writer, patches, src_dir)
         n_tfrecord += len(patches)
 
     print('N of TFRecords:', n_tfrecord)
+    import json
+
+    coco_custom_dataset = {
+        "info": {
+            "description": "Custom Dataset",
+            "url": "http://cocodataset.org",
+            "version": "1.0",
+            "year": 2020,
+            "contributor": "Me",
+            "date_created": "2020/02/25"
+        },
+        "licenses": [{
+            "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/",
+            "id": 1,
+            "name": "Attribution-NonCommercial-ShareAlike License"
+        },
+            {
+            "url": "http://creativecommons.org/licenses/by-nc/2.0/",
+            "id": 2,
+            "name": "Attribution-NonCommercial License"
+        }],
+        "images": gimages,
+        "annotations": annotations,
+        "categories": [{"supercategory": "ship", "id": 1, "name": "aircraft carrier"},
+                       {"supercategory": "ship", "id": 2, "name": "container"},
+                       {"supercategory": "ship", "id": 3, "name": "oil tanker"},
+                       {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
+    }
+
+    with open(os.path.join(src_dir, 'coco.custom.dataset'), 'w') as f:
+        f.write(json.dumps(coco_custom_dataset, indent=4))
+        #f.write(json.dumps(annotations, indent=4))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create TF Records from geojson')
+    parser = argparse.ArgumentParser(
+        description='Create TF Records from geojson')
     parser.add_argument('--src_dir',
                         type=str,
-                        required=True,
+                        # required=True,
                         metavar='DIR',
+                        default=r"C:\Users\sync\dev\Satellite_images",
                         help='Root directory to geojson and images')
     parser.add_argument('--dst_path',
                         type=str,
@@ -286,7 +421,8 @@ if __name__ == '__main__':
                         help='Threshold value for determining contained objects')
     parser.add_argument('--is_include_only_pos',
                         dest='is_include_only_pos',
-                        action='store_true',
+                        # action='store_true',
+                        action='store_false',
                         help='Whether or not to include only positive patch image(containing at least one object)')
 
     args = parser.parse_args()
