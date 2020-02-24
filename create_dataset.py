@@ -380,8 +380,8 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
             "id": 2,
             "name": "Attribution-NonCommercial License"
         }],
-        "images": [],  # gimages,
-        "annotations": [],  # annotations,
+        "images": gimages,
+        "annotations": annotations,
         "categories": [{"supercategory": "ship", "id": 1, "name": "aircraft carrier"},
                        {"supercategory": "ship", "id": 2, "name": "container"},
                        {"supercategory": "ship", "id": 3, "name": "oil tanker"},
