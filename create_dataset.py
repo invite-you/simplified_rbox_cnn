@@ -235,7 +235,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
         global gimg_id
         gimages.append({
             "license": 1,
-            "file_name": image_filename,
+            "file_name": image_filename.decode(),
             "coco_url": "",
             "height": patch_height,
             "width": patch_width,
@@ -380,8 +380,8 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
             "id": 2,
             "name": "Attribution-NonCommercial License"
         }],
-        "images": gimages,
-        "annotations": annotations,
+        "images": [],  # gimages,
+        "annotations": [],  # annotations,
         "categories": [{"supercategory": "ship", "id": 1, "name": "aircraft carrier"},
                        {"supercategory": "ship", "id": 2, "name": "container"},
                        {"supercategory": "ship", "id": 3, "name": "oil tanker"},
@@ -400,7 +400,7 @@ if __name__ == '__main__':
                         type=str,
                         # required=True,
                         metavar='DIR',
-                        default=r"C:\Users\sync\dev\Satellite_images",
+                        default=r"/content/gdrive/'My Drive'/findShip/",
                         help='Root directory to geojson and images')
     parser.add_argument('--dst_path',
                         type=str,
