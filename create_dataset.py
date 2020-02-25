@@ -235,7 +235,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
         global gimg_id
         gimages.append({
             "license": 1,
-            "file_name": image_filename.decode(),
+            "file_name": F"{id}_{patch.row}_{patch.col}.png",
             "coco_url": "",
             "height": patch_height,
             "width": patch_width,
@@ -409,7 +409,7 @@ if __name__ == '__main__':
                         help='Path to save tfrecords')
     parser.add_argument('--patch_size',
                         type=int,
-                        default=768,
+                        default=1024,
                         help='Patch size')
     parser.add_argument('--patch_overlay',
                         type=int,
