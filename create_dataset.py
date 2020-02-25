@@ -201,14 +201,12 @@ def sort_clockwise(points):
     return [coord for coords in sorted_coords for coord in coords]
 
 
-gimg_id = 0
-gannt_id = 0
+
 map_labels = {'aircraft carrier': 1, 'container': 2,
               'oil tanker': 3, 'maritime vessels': 4}
 # from pycocotools import mask as cocomask
 
-annotations = []
-gimages = []
+
 
 
 def write_tfrecords(trf_writer, patches, src_dir):
@@ -219,15 +217,17 @@ def write_tfrecords(trf_writer, patches, src_dir):
        :param (str) obj_type: object type which is one of {'rbox', 'bbox'}
     """
 
-    
-      
+    gimg_id = 0
+    gannt_id = 0
+    annotations = []
+    gimages = []
     
     for patch in patches:
         image = cv2.cvtColor(patch.image, cv2.COLOR_RGB2BGR)
         id = patch.image_id.split(".")[0]
         patch_image_path = os.path.join(
             src_dir, 'new_patch', F"{id}_{patch.row}_{patch.col}.png")
-        #cv2.imwrite(patch_image_path, image)
+        cv2.imwrite(patch_image_path, image)
         #image_as_bytes = cv2.imencode('.png', image)[1].tostring()
 
         #encoded_image = image_as_bytes
@@ -293,10 +293,13 @@ def write_tfrecords(trf_writer, patches, src_dir):
 
             gannt_id += 1
         gimg_id += 1
+        
+        
         # tfexample = cvt_rbox_to_tfexample(encoded_image, patch_height, patch_width, image_filename, image_format,
         #                                  center_ys, center_xs, heights, widths, thetas, class_texts, class_indices)
 
         # trf_writer.write(tfexample.SerializeToString())
+        return annotations, gimages
 
 
 def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, object_fraction_thresh=0.7,
@@ -323,6 +326,87 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     obj_polys = cvt_coords_to_polys(obj_coords)
     obj_coords = cvt_coords_to_rboxes(obj_coords)
 
+    
+    img = []
+    ann = []
+    # Load image files as TIF
+    for image_id in tqdm(sorted(set(image_ids))[50:]):
+
+        image = imread(os.path.join(src_dir, 'images/', image_id))
+
+        # Get data in the current image
+        obj_coords_in_image = obj_coords[image_ids == image_id]
+        obj_polys_in_image = obj_polys[image_ids == image_id]
+        class_indices_in_image = class_indices[image_ids == image_id]
+        class_texts_in_image = class_names[image_ids == image_id]
+
+        # Create patches including objects
+        patches = []
+        step = patch_size - patch_overlay
+        for row in range(0, image.shape[0] - patch_overlay, step):
+            for col in range(0, image.shape[1] - patch_overlay, step):
+                patch_poly = Polygon([(col, row), (col + patch_size, row),
+                                      (col + patch_size, row + patch_size), (col, row + patch_size)])
+
+                # Check if a patch contains objects and append objects
+                objects_in_patch = []
+                for idx, obj_poly in enumerate(obj_polys_in_image):
+                    if IoA(obj_poly, patch_poly) > object_fraction_thresh:
+                        objects_in_patch.append(Object(obj_coords_in_image[idx], class_indices_in_image[idx],
+                                                       class_texts_in_image[idx]))
+
+                # if a patch contains objects, append the patch to save tfrecords
+                if not is_include_only_pos or objects_in_patch:
+                    objects_in_patch = [
+                        Object(coord=[obj.coord[0] - row, obj.coord[1] - col, obj.coord[2], obj.coord[3], obj.coord[4]],
+                               cls_idx=obj.cls_idx, cls_text=obj.cls_text) for obj in objects_in_patch]
+                    patch_image = get_patch_image(image, row, col, patch_size)
+
+                    patches.append(
+                        Patch(image_id=image_id, image=patch_image, row=row, col=col, objects=objects_in_patch))
+
+        a, i = write_tfrecords(trf_writer, patches, src_dir)
+        ann.extend(a)
+        img.extend(i)
+        n_tfrecord += len(patches)
+
+    print('N of TFRecords:', n_tfrecord)
+    import json
+
+    coco_custom_dataset = {
+        "info": {
+            "description": "Custom Dataset",
+            "url": "http://cocodataset.org",
+            "version": "1.0",
+            "year": 2020,
+            "contributor": "Me",
+            "date_created": "2020/02/25"
+        },
+        "licenses": [{
+            "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/",
+            "id": 1,
+            "name": "Attribution-NonCommercial-ShareAlike License"
+        },
+            {
+            "url": "http://creativecommons.org/licenses/by-nc/2.0/",
+            "id": 2,
+            "name": "Attribution-NonCommercial License"
+        }],
+        "images": img,
+        "annotations": ann,
+        "categories": [{"supercategory": "ship", "id": 1, "name": "aircraft carrier"},
+                       {"supercategory": "ship", "id": 2, "name": "container"},
+                       {"supercategory": "ship", "id": 3, "name": "oil tanker"},
+                       {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
+    }
+
+    with open(os.path.join(src_dir, 'coco.custom.train.dataset'), 'w') as f:
+        f.write(json.dumps(coco_custom_dataset, indent=4))
+        #f.write(json.dumps(annotations, indent=4))
+
+        
+    img = []
+    ann = []
     # Load image files as TIF
     for image_id in tqdm(sorted(set(image_ids))[:50]):
 
@@ -359,7 +443,9 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                     patches.append(
                         Patch(image_id=image_id, image=patch_image, row=row, col=col, objects=objects_in_patch))
 
-        write_tfrecords(trf_writer, patches, src_dir)
+        a, i = write_tfrecords(trf_writer, patches, src_dir)
+        ann.extend(a)
+        img.extend(i)
         n_tfrecord += len(patches)
 
     print('N of TFRecords:', n_tfrecord)
@@ -384,8 +470,8 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
             "id": 2,
             "name": "Attribution-NonCommercial License"
         }],
-        "images": gimages,
-        "annotations": annotations,
+        "images": img,
+        "annotations": ann,
         "categories": [{"supercategory": "ship", "id": 1, "name": "aircraft carrier"},
                        {"supercategory": "ship", "id": 2, "name": "container"},
                        {"supercategory": "ship", "id": 3, "name": "oil tanker"},
@@ -395,8 +481,8 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     with open(os.path.join(src_dir, 'coco.custom.test.dataset'), 'w') as f:
         f.write(json.dumps(coco_custom_dataset, indent=4))
         #f.write(json.dumps(annotations, indent=4))
-
-
+        
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Create TF Records from geojson')
