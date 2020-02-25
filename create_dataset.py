@@ -244,7 +244,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
             "id": gimg_id
         })
 
-        gimg_id += 1
+        
 
         center_ys, center_xs, heights, widths, thetas, class_indices, class_texts = [
         ], [], [], [], [], [], []
@@ -289,6 +289,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
             })
 
             gannt_id += 1
+        gimg_id += 1
         # tfexample = cvt_rbox_to_tfexample(encoded_image, patch_height, patch_width, image_filename, image_format,
         #                                  center_ys, center_xs, heights, widths, thetas, class_texts, class_indices)
 
