@@ -299,7 +299,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
         #                                  center_ys, center_xs, heights, widths, thetas, class_texts, class_indices)
 
         # trf_writer.write(tfexample.SerializeToString())
-        return annotations, gimages
+    return annotations, gimages
 
 
 def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, object_fraction_thresh=0.7,
