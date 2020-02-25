@@ -220,15 +220,14 @@ def write_tfrecords(trf_writer, patches, src_dir):
     """
 
     
-    if len(gimages) > 200: return
-        
+      
     
     for patch in patches:
         image = cv2.cvtColor(patch.image, cv2.COLOR_RGB2BGR)
         id = patch.image_id.split(".")[0]
         patch_image_path = os.path.join(
             src_dir, 'new_patch', F"{id}_{patch.row}_{patch.col}.png")
-        cv2.imwrite(patch_image_path, image)
+        #cv2.imwrite(patch_image_path, image)
         #image_as_bytes = cv2.imencode('.png', image)[1].tostring()
 
         #encoded_image = image_as_bytes
@@ -325,7 +324,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     obj_coords = cvt_coords_to_rboxes(obj_coords)
 
     # Load image files as TIF
-    for image_id in tqdm(sorted(set(image_ids))):
+    for image_id in tqdm(sorted(set(image_ids))[50:]):
 
         image = imread(os.path.join(src_dir, 'images/', image_id))
 
@@ -393,7 +392,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                        {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
     }
 
-    with open(os.path.join(src_dir, 'coco.custom.testdataset'), 'w') as f:
+    with open(os.path.join(src_dir, 'coco.custom.train.dataset'), 'w') as f:
         f.write(json.dumps(coco_custom_dataset, indent=4))
         #f.write(json.dumps(annotations, indent=4))
 
