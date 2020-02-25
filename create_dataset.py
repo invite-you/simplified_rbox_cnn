@@ -324,7 +324,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     obj_coords = cvt_coords_to_rboxes(obj_coords)
 
     # Load image files as TIF
-    for image_id in tqdm(sorted(set(image_ids))[50:]):
+    for image_id in tqdm(sorted(set(image_ids))[:50]):
 
         image = imread(os.path.join(src_dir, 'images/', image_id))
 
@@ -392,7 +392,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                        {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
     }
 
-    with open(os.path.join(src_dir, 'coco.custom.train.dataset'), 'w') as f:
+    with open(os.path.join(src_dir, 'coco.custom.test.dataset'), 'w') as f:
         f.write(json.dumps(coco_custom_dataset, indent=4))
         #f.write(json.dumps(annotations, indent=4))
 
