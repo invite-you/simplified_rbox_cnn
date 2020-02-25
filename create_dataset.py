@@ -219,6 +219,10 @@ def write_tfrecords(trf_writer, patches, src_dir):
        :param (str) obj_type: object type which is one of {'rbox', 'bbox'}
     """
 
+    
+    if len(gimages) > 200: return
+        
+    
     for patch in patches:
         image = cv2.cvtColor(patch.image, cv2.COLOR_RGB2BGR)
         id = patch.image_id.split(".")[0]
@@ -389,7 +393,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                        {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
     }
 
-    with open(os.path.join(src_dir, 'coco.custom.dataset'), 'w') as f:
+    with open(os.path.join(src_dir, 'coco.custom.testdataset'), 'w') as f:
         f.write(json.dumps(coco_custom_dataset, indent=4))
         #f.write(json.dumps(annotations, indent=4))
 
