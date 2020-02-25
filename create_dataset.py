@@ -235,7 +235,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
         patch_width = patch.image.shape[1]
         image_filename = patch.image_id.encode()
 
-        global gimg_id
+        
         gimages.append({
             "license": 1,
             "file_name": F"{id}_{patch.row}_{patch.col}.png",
@@ -278,7 +278,7 @@ def write_tfrecords(trf_writer, patches, src_dir):
             points = [xx for x in rbox for xx in x]
             points = sort_clockwise(points)
 
-            global gannt_id
+            
 
             annotations.append({
                 "segmentation": [points],
