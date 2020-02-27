@@ -209,7 +209,7 @@ map_labels = {'aircraft carrier': 1, 'container': 2,
 
 
 
-def write_tfrecords(trf_writer, patches, src_dir):
+def write_tfrecords(trf_writer, patches, src_dir, ftrain=True):
     """ Write patch information into writer
 
        :param (str) dst_tfr_path: path to save tfrecords
@@ -225,8 +225,12 @@ def write_tfrecords(trf_writer, patches, src_dir):
     for patch in patches:
         image = cv2.cvtColor(patch.image, cv2.COLOR_RGB2BGR)
         id = patch.image_id.split(".")[0]
-        patch_image_path = os.path.join(
-            src_dir, 'new_patch', F"{id}_{patch.row}_{patch.col}.png")
+        if ftrain:
+            patch_image_path = os.path.join(
+                src_dir, 'custom_coco', 'train2017', F"{id}_{patch.row}_{patch.col}.png")
+        else:
+            patch_image_path = os.path.join(
+                src_dir, 'custom_coco', 'val2017', F"{id}_{patch.row}_{patch.col}.png")
         cv2.imwrite(patch_image_path, image)
         #image_as_bytes = cv2.imencode('.png', image)[1].tostring()
 
@@ -365,7 +369,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                     patches.append(
                         Patch(image_id=image_id, image=patch_image, row=row, col=col, objects=objects_in_patch))
 
-        a, i = write_tfrecords(trf_writer, patches, src_dir)
+        a, i = write_tfrecords(trf_writer, patches, src_dir, ftrain=True)
         ann.extend(a)
         img.extend(i)
         n_tfrecord += len(patches)
@@ -400,7 +404,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                        {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
     }
 
-    with open(os.path.join(src_dir, 'coco.custom.train.dataset'), 'w') as f:
+    with open(os.path.join(src_dir, 'custom_coco', 'annotations', 'instances_train2017.json'), 'w') as f:
         f.write(json.dumps(coco_custom_dataset, indent=4))
         #f.write(json.dumps(annotations, indent=4))
 
@@ -443,7 +447,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                     patches.append(
                         Patch(image_id=image_id, image=patch_image, row=row, col=col, objects=objects_in_patch))
 
-        a, i = write_tfrecords(trf_writer, patches, src_dir)
+        a, i = write_tfrecords(trf_writer, patches, src_dir, ftrain=False)
         ann.extend(a)
         img.extend(i)
         n_tfrecord += len(patches)
@@ -478,7 +482,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
                        {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
     }
 
-    with open(os.path.join(src_dir, 'coco.custom.test.dataset'), 'w') as f:
+    with open(os.path.join(src_dir, 'custom_coco', 'annotations', 'instances_val2017.json'), 'w') as f:
         f.write(json.dumps(coco_custom_dataset, indent=4))
         #f.write(json.dumps(annotations, indent=4))
         
