@@ -334,7 +334,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     img = []
     ann = []
     # Load image files as TIF
-    for image_id in sorted(set(image_ids))[50:]:
+    for image_id in tqdm(sorted(set(image_ids))[50:]):
 
         image = imread(os.path.join(src_dir, 'images/', image_id))
 
@@ -412,7 +412,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     img = []
     ann = []
     # Load image files as TIF
-    for image_id in sorted(set(image_ids))[:50]:
+    for image_id in tqdm(sorted(set(image_ids))[:50]):
 
         image = imread(os.path.join(src_dir, 'images/', image_id))
 
