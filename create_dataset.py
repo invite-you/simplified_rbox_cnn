@@ -503,7 +503,7 @@ if __name__ == '__main__':
                         help='Path to save tfrecords')
     parser.add_argument('--patch_size',
                         type=int,
-                        default=1024,
+                        default=512,
                         help='Patch size')
     parser.add_argument('--patch_overlay',
                         type=int,
