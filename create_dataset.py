@@ -243,6 +243,10 @@ def save_annot(src_dir, what, images, annotations):
         f.write(json.dumps(coco_custom_dataset, indent=4))
 
 
+image_index = 0
+annts_index = 0
+
+
 def write_tfrecords(src_dir, what, patches):
     """ Write patch information into writer
        :param (str) dst_tfr_path: path to save tfrecords
@@ -250,7 +254,6 @@ def write_tfrecords(src_dir, what, patches):
        :param (str) obj_type: object type which is one of {'rbox', 'bbox'}
     """
     images, annotations = [], []
-    annts_index = 0
     map_labels = {'aircraft carrier': 1, 'container': 2,
                   'oil tanker': 3, 'maritime vessels': 4}
 
@@ -264,7 +267,7 @@ def write_tfrecords(src_dir, what, patches):
     if not os.path.isdir(image_path):
         os.makedirs(image_path)
 
-    for image_index, patch in enumerate(patches):
+    for patch in patches:
         image = cv2.cvtColor(patch.image, cv2.COLOR_RGB2BGR)
         patch_height = patch.image.shape[0]
         patch_width = patch.image.shape[1]
@@ -301,8 +304,8 @@ def write_tfrecords(src_dir, what, patches):
                 "id": annts_index
             })
             annts_index += 1
-
-            """
+        image_index += 1
+        """
             polygon = [(x, y) for x, y in zip(polygon[0::2], polygon[1::2])]
             polygon = np.array(polygon, np.int32)
 
@@ -401,7 +404,7 @@ if __name__ == '__main__':
                         type=str,
                         # required=True,
                         metavar='DIR',
-                        default=r"/content/gdrive/My Drive/findShip/",
+                        default=r"C:\Users\sync\dev\Satellite_images",
                         help='Root directory to geojson and images')
     parser.add_argument('--dst_path',
                         type=str,
