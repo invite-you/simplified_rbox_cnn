@@ -401,7 +401,7 @@ if __name__ == '__main__':
                         type=str,
                         # required=True,
                         metavar='DIR',
-                        default=r"C:\Users\sync\dev\Satellite_images",
+                        default=r"/content/gdrive/My Drive/findShip/",
                         help='Root directory to geojson and images')
     parser.add_argument('--dst_path',
                         type=str,
