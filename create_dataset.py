@@ -253,6 +253,9 @@ def write_tfrecords(src_dir, what, patches):
        :param (list) patches: a list of Patch to save tfrecords
        :param (str) obj_type: object type which is one of {'rbox', 'bbox'}
     """
+    global image_index
+    global annts_index
+    
     images, annotations = [], []
     map_labels = {'aircraft carrier': 1, 'container': 2,
                   'oil tanker': 3, 'maritime vessels': 4}
