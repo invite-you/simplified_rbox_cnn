@@ -9,7 +9,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 from skimage.io import imread
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 import tensorflow as tf
 import shapely
 
