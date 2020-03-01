@@ -234,7 +234,7 @@ def save_annot(src_dir, what, images, annotations):
             src_dir, 'custom_coco', 'annotations', 'instances_train2017.json')
     else:
         annt_path = os.path.join(
-            src_dir, 'custom_coco', 'annotations', 'instances_test2017.json')
+            src_dir, 'custom_coco', 'annotations', 'instances_val2017.json')
 
     if not(os.path.isdir(os.path.dirname(annt_path))):
         os.makedirs(os.path.dirname(annt_path))
@@ -265,7 +265,7 @@ def write_tfrecords(src_dir, what, patches):
             src_dir, 'custom_coco', 'train2017')
     else:
         image_path = os.path.join(
-            src_dir, 'custom_coco', 'test2017')
+            src_dir, 'custom_coco', 'val2017')
 
     if not os.path.isdir(image_path):
         os.makedirs(image_path)
