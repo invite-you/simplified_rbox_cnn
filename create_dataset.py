@@ -298,7 +298,7 @@ def write_tfrecords(src_dir, what, patches):
             poly = poly.simplify(1.0, preserve_topology=False)            
             polygon = [np.array(poly.exterior.coords).ravel().tolist()]
             
-            multi_poly = MultiPolygon([polygon])
+            multi_poly = MultiPolygon([poly])
             x, y, max_x, max_y = multi_poly.bounds
             width = max_x - x
             height = max_y - y
