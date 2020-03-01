@@ -295,15 +295,19 @@ def write_tfrecords(src_dir, what, patches):
         ], [], [], [], [], [], []
         for coord, poly, cls_idx, cls_text in patch.objects:
             
-            x, y, max_x, max_y = poly.bounds
+            poly = poly.simplify(1.0, preserve_topology=False)            
+            polygon = [np.array(poly.exterior.coords).ravel().tolist()]
+            
+            multi_poly = MultiPolygon([polygon])
+            x, y, max_x, max_y = multi_poly.bounds
             width = max_x - x
             height = max_y - y
             bbox = (x, y, width, height)
+            area = multi_poly.area
             
-            polygon = [np.array(poly.exterior.coords).ravel().tolist()]
             annotations.append({
                 "segmentation": polygon,
-                "area": poly.area,
+                "area": area,
                 "iscrowd": 0,
                 "image_id": image_index,
                 "bbox": bbox,  # (x, y, width, height)
