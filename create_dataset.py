@@ -231,10 +231,10 @@ def save_annot(src_dir, what, images, annotations):
 
     if what == "train":
         annt_path = os.path.join(
-            src_dir, 'custom_coco_', 'annotations', 'instances_train2017.json')
+            src_dir, 'custom_coco_all', 'annotations', 'instances_train2017.json')
     else:
         annt_path = os.path.join(
-            src_dir, 'custom_coco_', 'annotations', 'instances_val2017.json')
+            src_dir, 'custom_coco_all', 'annotations', 'instances_val2017.json')
 
     if not(os.path.isdir(os.path.dirname(annt_path))):
         os.makedirs(os.path.dirname(annt_path))
@@ -262,10 +262,10 @@ def write_tfrecords(src_dir, what, patches):
 
     if what == "train":
         image_path = os.path.join(
-            src_dir, 'custom_coco_', 'train2017')
+            src_dir, 'custom_coco_all', 'train2017')
     else:
         image_path = os.path.join(
-            src_dir, 'custom_coco_', 'val2017')
+            src_dir, 'custom_coco_all', 'val2017')
 
     if not os.path.isdir(image_path):
         os.makedirs(image_path)
@@ -358,7 +358,7 @@ def create_tfrecords(src_dir, dst_path, patch_size=1024, patch_overlay=384, obje
     obj_coords = cvt_coords_to_rboxes(obj_coords)
 
     if what == 'train':
-        datatest = sorted(set(image_ids))[50:]
+        datatest = sorted(set(image_ids))
     else:
         datatest = sorted(set(image_ids))[:50]
 
