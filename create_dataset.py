@@ -271,8 +271,22 @@ def write_tfrecords(src_dir, what, patches):
     global annts_index
     
     images, annotations = [], []
-    map_labels = {'aircraft carrier': 1, 'container': 2,
-                  'oil tanker': 3, 'maritime vessels': 4}
+    map_labels = {'small ship': 1,
+                  'large ship': 2,
+                  'civilian aircraft': 3,
+                  'military aircraft': 4,
+                  'small car': 5,
+                  'bus': 6,
+                  'truck': 7,
+                  'train': 8,
+                  'crane': 9,
+                  'bridge': 10,
+                  'oil tank': 11,
+                  'dam': 12,
+                  'athletic field': 13,
+                  'helipad': 14,
+                  'roundabout': 15,
+                  }
 
     if what == "train":
         image_path = os.path.join(
