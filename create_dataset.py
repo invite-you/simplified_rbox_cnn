@@ -322,7 +322,7 @@ def write_tfrecords(src_dir, what, patches):
         center_ys, center_xs, heights, widths, thetas, class_indices, class_texts = [
         ], [], [], [], [], [], []
         for coord, poly, cls_idx, cls_text in patch.objects:
-            
+            if cls_text == 'etc': continue
             poly = poly.simplify(1.0, preserve_topology=False)            
             polygon = [np.array(poly.exterior.coords).ravel().tolist()]
             
