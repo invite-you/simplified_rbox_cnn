@@ -223,10 +223,24 @@ def save_annot(src_dir, what, images, annotations):
         }],
         "images": images,
         "annotations": annotations,
-        "categories": [{"supercategory": "ship", "id": 1, "name": "aircraft carrier"},
-                       {"supercategory": "ship", "id": 2, "name": "container"},
-                       {"supercategory": "ship", "id": 3, "name": "oil tanker"},
-                       {"supercategory": "ship", "id": 4, "name": "maritime vessels"}]
+        "categories":[{"supercategory": "ship", "id": 1, "name": "small ship"},
+                       {"supercategory": "ship", "id": 2, "name": "large ship"},
+                       {"supercategory": "ship", "id": 3,
+                           "name": "civilian aircraft"},
+                       {"supercategory": "ship", "id": 4,
+                           "name": "maritime vessels"},
+                       {"supercategory": "ship", "id": 5, "name": "small car"},
+                       {"supercategory": "ship", "id": 6, "name": "bus"},
+                       {"supercategory": "ship", "id": 7, "name": "truck"},
+                       {"supercategory": "ship", "id": 8, "name": "train"},
+                       {"supercategory": "ship", "id": 9, "name": "crane"},
+                       {"supercategory": "ship", "id": 10, "name": "bridge"},
+                       {"supercategory": "ship", "id": 11, "name": "oil tank"},
+                       {"supercategory": "ship", "id": 12, "name": "dam"},
+                       {"supercategory": "ship", "id": 13,
+                           "name": "athletic field"},
+                       {"supercategory": "ship", "id": 14, "name": "helipad"},
+                       {"supercategory": "ship", "id": 15, "name": "roundabout"}]
     }
 
     if what == "train":
