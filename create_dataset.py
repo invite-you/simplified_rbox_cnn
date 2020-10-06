@@ -60,7 +60,7 @@ def load_geojson(filename):
         properties = data['features'][idx]['properties']
         image_ids[idx] = properties['image_id']
         obj_coords[idx] = np.array(
-            [float(num) for num in properties['bounds_imcoords'].split(",")])
+            [float(num) for num in properties['object_imcoords'].split(",")])
         class_indices[idx] = properties['type_id']
         class_names[idx] = properties['type_name']
 
